@@ -5,7 +5,10 @@ if(POLICY CMP0091)
     cmake_policy(SET CMP0091 NEW) # Enables use of MSVC_RUNTIME_LIBRARY
 endif()
 
-project(pugixml VERSION 1.14 LANGUAGES CXX)
+# use differnent names on install, so projects can depend on pugixml
+set(OUTPUT_NAME_SUFFIX_MOD "mbf")
+
+project(pugixml-${OUTPUT_NAME_SUFFIX_MOD} VERSION 1.14 LANGUAGES CXX)
 
 include(CMakePackageConfigHelpers)
 include(CMakeDependentOption)
@@ -128,7 +131,8 @@ endif()
 
 if (NOT BUILD_SHARED_LIBS OR PUGIXML_BUILD_SHARED_AND_STATIC_LIBS)
   add_library(pugixml-static STATIC
-    ${PROJECT_SOURCE_DIR}/src/pugixml.cpp)
+    ${PROJECT_SOURCE_DIR}/src/pugixml_char.cpp
+	${PROJECT_SOURCE_DIR}/src/pugixml_wchar.cpp)
   add_library(pugixml::static ALIAS pugixml-static)
   list(APPEND libs pugixml-static)
 
@@ -164,7 +168,7 @@ set_target_properties(${libs}
     POSITION_INDEPENDENT_CODE ON
     SOVERSION ${PROJECT_VERSION_MAJOR}
     VERSION ${PROJECT_VERSION}
-    OUTPUT_NAME pugixml)
+    OUTPUT_NAME pugixml-${OUTPUT_NAME_SUFFIX_MOD})
 
 set_target_properties(${libs}
   PROPERTIES
@@ -192,10 +196,10 @@ if (PUGIXML_USE_POSTFIX)
   endif()
 endif()
 
-configure_file(scripts/pugixml.pc.in pugixml.pc @ONLY)
+configure_file(scripts/pugixml.pc.in pugixml-${OUTPUT_NAME_SUFFIX_MOD}.pc @ONLY)
 
 export(TARGETS ${install-targets}
-  NAMESPACE pugixml::
+  NAMESPACE pugixml-${OUTPUT_NAME_SUFFIX_MOD}::
   FILE pugixml-targets.cmake)
 
 if(PUGIXML_INSTALL)
@@ -223,23 +227,25 @@ if(PUGIXML_INSTALL)
     INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}${versioned-dir})
 
   install(EXPORT pugixml-targets
-    NAMESPACE pugixml::
-    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/pugixml COMPONENT ${PUGIXML_DEVELOPMENT_COMPONENT})
+    NAMESPACE pugixml-${OUTPUT_NAME_SUFFIX_MOD}::
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/pugixml-${OUTPUT_NAME_SUFFIX_MOD} COMPONENT ${PUGIXML_DEVELOPMENT_COMPONENT})
 
   install(FILES
     "${PROJECT_BINARY_DIR}/pugixml-config-version.cmake"
     "${PROJECT_BINARY_DIR}/pugixml-config.cmake"
-    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/pugixml COMPONENT ${PUGIXML_DEVELOPMENT_COMPONENT})
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/pugixml-${OUTPUT_NAME_SUFFIX_MOD} COMPONENT ${PUGIXML_DEVELOPMENT_COMPONENT})
 
-  install(FILES ${PROJECT_BINARY_DIR}/pugixml.pc
+  install(FILES ${PROJECT_BINARY_DIR}/pugixml-${OUTPUT_NAME_SUFFIX_MOD}.pc
     DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig COMPONENT ${PUGIXML_DEVELOPMENT_COMPONENT})
 
   install(
     FILES
       "${PROJECT_SOURCE_DIR}/src/pugiconfig.hpp"
       "${PROJECT_SOURCE_DIR}/src/pugixml.hpp"
+      "${PROJECT_SOURCE_DIR}/src/pugixml_char.hpp"
+      "${PROJECT_SOURCE_DIR}/src/pugixml_wchar.hpp"
     DESTINATION
-      ${CMAKE_INSTALL_INCLUDEDIR}${versioned-dir} COMPONENT ${PUGIXML_DEVELOPMENT_COMPONENT})
+      ${CMAKE_INSTALL_INCLUDEDIR}${versioned-dir}/${OUTPUT_NAME_SUFFIX_MOD} COMPONENT ${PUGIXML_DEVELOPMENT_COMPONENT})
 endif()
 
 if (PUGIXML_BUILD_TESTS)
