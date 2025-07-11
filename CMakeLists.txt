@@ -100,28 +100,28 @@ set(versioned-dir $<$<BOOL:${PUGIXML_USE_VERSIONED_LIBDIR}>:/pugixml-${PROJECT_V
 set(libs)
 
 if (BUILD_SHARED_LIBS)
-  add_library(pugixml-shared SHARED
+  add_library(pugixml-${OUTPUT_NAME_SUFFIX_MOD}-shared SHARED
     ${PROJECT_SOURCE_DIR}/scripts/pugixml_dll.rc
     ${PROJECT_SOURCE_DIR}/src/pugixml.cpp)
-  add_library(pugixml::shared ALIAS pugixml-shared)
-  list(APPEND libs pugixml-shared)
+  add_library(pugixml-${OUTPUT_NAME_SUFFIX_MOD}::shared ALIAS pugixml-${OUTPUT_NAME_SUFFIX_MOD}-shared)
+  list(APPEND libs pugixml-${OUTPUT_NAME_SUFFIX_MOD}-shared)
   string(CONCAT pugixml.msvc $<OR:
     $<STREQUAL:${CMAKE_CXX_COMPILER_FRONTEND_VARIANT},MSVC>,
     $<CXX_COMPILER_ID:MSVC>
   >)
 
-  set_property(TARGET pugixml-shared PROPERTY EXPORT_NAME shared)
-  target_include_directories(pugixml-shared
+  set_property(TARGET pugixml-${OUTPUT_NAME_SUFFIX_MOD}-shared PROPERTY EXPORT_NAME shared)
+  target_include_directories(pugixml-${OUTPUT_NAME_SUFFIX_MOD}-shared
     PUBLIC
       $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src>)
-  target_compile_definitions(pugixml-shared
+  target_compile_definitions(pugixml-${OUTPUT_NAME_SUFFIX_MOD}-shared
     PUBLIC
       ${PUGIXML_BUILD_DEFINES}
       ${PUGIXML_PUBLIC_DEFINITIONS}
     PRIVATE
       PUGIXML_API=$<IF:${pugixml.msvc},__declspec\(dllexport\),__attribute__\(\(visibility\("default"\)\)\)>
     )
-  target_compile_options(pugixml-shared
+  target_compile_options(pugixml-${OUTPUT_NAME_SUFFIX_MOD}-shared
     PRIVATE
       ${msvc-rt-mtd-shared}
       ${msvc-rt-mtd-static}
@@ -130,21 +130,21 @@ if (BUILD_SHARED_LIBS)
 endif()
 
 if (NOT BUILD_SHARED_LIBS OR PUGIXML_BUILD_SHARED_AND_STATIC_LIBS)
-  add_library(pugixml-static STATIC
+  add_library(pugixml-${OUTPUT_NAME_SUFFIX_MOD}-static STATIC
     ${PROJECT_SOURCE_DIR}/src/pugixml_char.cpp
 	${PROJECT_SOURCE_DIR}/src/pugixml_wchar.cpp)
-  add_library(pugixml::static ALIAS pugixml-static)
-  list(APPEND libs pugixml-static)
+  add_library(pugixml-${OUTPUT_NAME_SUFFIX_MOD}::static ALIAS pugixml-${OUTPUT_NAME_SUFFIX_MOD}-static)
+  list(APPEND libs pugixml-${OUTPUT_NAME_SUFFIX_MOD}-static)
 
-  set_property(TARGET pugixml-static PROPERTY EXPORT_NAME static)
-  target_include_directories(pugixml-static
+  set_property(TARGET pugixml-${OUTPUT_NAME_SUFFIX_MOD}-static PROPERTY EXPORT_NAME static)
+  target_include_directories(pugixml-${OUTPUT_NAME_SUFFIX_MOD}-static
     PUBLIC
       $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src>)
-  target_compile_definitions(pugixml-static
+  target_compile_definitions(pugixml-${OUTPUT_NAME_SUFFIX_MOD}-static
     PUBLIC
       ${PUGIXML_BUILD_DEFINES}
       ${PUGIXML_PUBLIC_DEFINITIONS})
-  target_compile_options(pugixml-static
+  target_compile_options(pugixml-${OUTPUT_NAME_SUFFIX_MOD}-static
     PRIVATE
       ${msvc-rt-mtd-shared}
       ${msvc-rt-mtd-static}
@@ -153,13 +153,13 @@ if (NOT BUILD_SHARED_LIBS OR PUGIXML_BUILD_SHARED_AND_STATIC_LIBS)
 endif()
 
 if (BUILD_SHARED_LIBS)
-  set(pugixml-alias pugixml-shared)
+  set(pugixml-${OUTPUT_NAME_SUFFIX_MOD}-alias pugixml-${OUTPUT_NAME_SUFFIX_MOD}-shared)
 else()
-  set(pugixml-alias pugixml-static)
+  set(pugixml-${OUTPUT_NAME_SUFFIX_MOD}-alias pugixml-${OUTPUT_NAME_SUFFIX_MOD}-static)
 endif()
-add_library(pugixml INTERFACE)
-target_link_libraries(pugixml INTERFACE ${pugixml-alias})
-add_library(pugixml::pugixml ALIAS pugixml)
+add_library(pugixml-${OUTPUT_NAME_SUFFIX_MOD} INTERFACE)
+target_link_libraries(pugixml-${OUTPUT_NAME_SUFFIX_MOD} INTERFACE ${pugixml-${OUTPUT_NAME_SUFFIX_MOD}-alias})
+add_library(pugixml-${OUTPUT_NAME_SUFFIX_MOD}::pugixml-${OUTPUT_NAME_SUFFIX_MOD} ALIAS pugixml-${OUTPUT_NAME_SUFFIX_MOD})
 
 set_target_properties(${libs}
   PROPERTIES
@@ -173,7 +173,7 @@ set_target_properties(${libs}
 set_target_properties(${libs}
   PROPERTIES
     EXCLUDE_FROM_ALL OFF)
-set(install-targets pugixml ${libs})
+set(install-targets pugixml-${OUTPUT_NAME_SUFFIX_MOD} ${libs})
 
 configure_package_config_file(
   "${PROJECT_SOURCE_DIR}/scripts/pugixml-config.cmake.in"
@@ -200,7 +200,7 @@ configure_file(scripts/pugixml.pc.in pugixml-${OUTPUT_NAME_SUFFIX_MOD}.pc @ONLY)
 
 export(TARGETS ${install-targets}
   NAMESPACE pugixml-${OUTPUT_NAME_SUFFIX_MOD}::
-  FILE pugixml-targets.cmake)
+  FILE pugixml-${OUTPUT_NAME_SUFFIX_MOD}-targets.cmake)
 
 if(PUGIXML_INSTALL)
   if (NOT DEFINED PUGIXML_RUNTIME_COMPONENT)
@@ -220,13 +220,13 @@ if(PUGIXML_INSTALL)
     set(namelink-component NAMELINK_COMPONENT ${PUGIXML_DEVELOPMENT_COMPONENT})
   endif()
   install(TARGETS ${install-targets}
-    EXPORT pugixml-targets
+    EXPORT pugixml-${OUTPUT_NAME_SUFFIX_MOD}-targets
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT ${PUGIXML_RUNTIME_COMPONENT}
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT ${PUGIXML_LIBRARY_COMPONENT} ${namelink-component}
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT ${PUGIXML_DEVELOPMENT_COMPONENT}
     INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}${versioned-dir})
 
-  install(EXPORT pugixml-targets
+  install(EXPORT pugixml-${OUTPUT_NAME_SUFFIX_MOD}-targets
     NAMESPACE pugixml-${OUTPUT_NAME_SUFFIX_MOD}::
     DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/pugixml-${OUTPUT_NAME_SUFFIX_MOD} COMPONENT ${PUGIXML_DEVELOPMENT_COMPONENT})
 
@@ -270,5 +270,5 @@ if (PUGIXML_BUILD_TESTS)
   add_dependencies(check pugixml-check)
   target_link_libraries(pugixml-check
     PRIVATE
-      pugixml::pugixml)
+      pugixml-${OUTPUT_NAME_SUFFIX_MOD}::pugixml-${OUTPUT_NAME_SUFFIX_MOD})
 endif()
